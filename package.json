@@ -1,0 +1,26 @@
+{
+  "name": "speed-test-scraper",
+  "version": "1.0.0",
+  "description": "A web scraper that will run any url in webpagetest and file the results in Google Sheets",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alecchampaign/speed-test-scraper.git"
+  },
+  "author": "Alec Champaign",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alecchampaign/speed-test-scraper/issues"
+  },
+  "homepage": "https://github.com/alecchampaign/speed-test-scraper#readme",
+  "dependencies": {
+    "puppeteer": "^5.5.0",
+    "puppeteer-extra": "^3.1.15",
+    "puppeteer-extra-plugin-stealth": "^2.6.5",
+    "random-useragent": "^0.5.0",
+    "user-agents": "^1.0.559"
+  }
+}

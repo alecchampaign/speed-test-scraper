@@ -1,58 +1,64 @@
-//const puppeteer = require('puppeteer');
-const puppeteerExtra = require('puppeteer-extra');
+const puppeteer = require('puppeteer-extra');
 const pluginStealth = require('puppeteer-extra-plugin-stealth');
 const randomUseragent = require('random-useragent');
 
-async function runTest(url) {
+// Yargs
+const yargs = require('yargs/yargs')
+const { hideBin } = require('yargs/helpers')
+const argv = yargs(hideBin(process.argv)).argv
+
+async function runTest(url, sheetName) {
     // start puppeteer
-    puppeteerExtra.use(pluginStealth());
-    const browser = await puppeteerExtra.launch({ headless: false, slowMo: 100 });
+    puppeteer.use(pluginStealth());
+    const browser = await puppeteer.launch({ headless: false, slowMo: 50 });
     const page = await browser.newPage();
 
     // set a random user agent & viewport to avoid captcha detection
     await page.setUserAgent(randomUseragent.getRandom());
     await page.setViewport({
-        width: 1920,
+        width: 1440,
         height: 5000,
-        deviceScaleFactor: 1,
+        deviceScaleFactor: 3,
         hasTouch: false,
         isLandscape: false,
         isMobile: false,
     });
     
+    // Step 1: Go to webpagetest and run test
     await page.goto('https://www.webpagetest.org', { waitUntil: 'domcontentloaded' });
-    await page.screenshot({ path: './screenshot.jpg'});
-    // enter url in input and run test
+
+    // enter url in input, select test type, run the test
     await page.type('#url', url);
-    await page.screenshot({ path: './screenshot1.jpg'});
+    await page.select('#location', 'Mobile_Dulles_MotoG4');
     await page.click('.start_test');
+
+    // Step 2: Wait for test to complete
     try {
         await page.waitForNavigation({waitUntil: "domcontentloaded"});
     } catch {
         console.log('ERROR: CAPTCHA')
-        await page.screenshot({ path: './error.jpg'});
     }
-    await page.screenshot({ path: './screenshot2.jpg'});
 
-    await page.waitForNavigation({waitUntil: "domcontentloaded"});
+    // Step 3: Scrape test results
+    await page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: 0 });
 
     const results = {
-        startRender: await page.$eval('#StartRender', elem => elem.innerText),
-        speedIndex: await page.$eval('#SpeedIndex', elem => elem.innerText),
+        startRender: await page.$eval('#StartRender', elem => Number(elem.innerText.replace('s', ''))).catch(() => console.error('MISSING: StartRender')),
+        speedIndex: await page.$eval('#SpeedIndex', elem => Number(elem.innerText)).catch(() => console.error('MISSING: SpeedIndex')),
         webVitals: {
-            //LCP: await page.$eval('#chromeUserTiming.LargestContentfulPaint', elem => elem.innerText),
-            // CLS: await page.$eval('#chromeUserTiming.CumulativeLayoutShift', elem => elem.innerText),
-            TBT: await page.$eval('#TotalBlockingTime', elem => elem.innerText)
+            LCP: await page.$eval('#chromeUserTiming\\.LargestContentfulPaint', elem => Number(elem.innerText.replace('s', ''))).catch(() => console.error('MISSING: LCP')),
+            CLS: await page.$eval('#chromeUserTiming\\.CumulativeLayoutShift', elem => Number(elem.innerText)).catch(() => console.error('MISSING: CLS')),
+            TBT: await page.$eval('#TotalBlockingTime', elem => elem.innerText).catch(() => console.error('MISSING: TBT'))
         },
         documentComplete: {
-
+            time: await page.$eval('#DocComplete', elem => Number(elem.innerText.replace('s', ''))).catch(() => console.error('MISSING: DocComplete Time')),
+            requests: await page.$eval('#RequestsDoc', elem => Number(elem.innerText)).catch(() => console.error('MISSING: DocComplete Requests'))
         },
         documentLoaded: {
 
         }
     }
-
     console.log(results);
 }
 
-runTest('https://www.analuisa.com');
+runTest(argv.url, argv.sheet);

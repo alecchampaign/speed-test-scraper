@@ -4,7 +4,8 @@
   "description": "A web scraper that will run any url in webpagetest and file the results in Google Sheets",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js --shm-size=1gb"
   },
   "repository": {
     "type": "git",
@@ -21,6 +22,7 @@
     "puppeteer-extra": "^3.1.15",
     "puppeteer-extra-plugin-stealth": "^2.6.5",
     "random-useragent": "^0.5.0",
-    "user-agents": "^1.0.559"
+    "user-agents": "^1.0.559",
+    "yargs": "^16.1.1"
   }
 }
